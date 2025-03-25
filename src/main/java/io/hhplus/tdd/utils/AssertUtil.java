@@ -1,4 +1,4 @@
-package io.hhplus.tdd;
+package io.hhplus.tdd.utils;
 
 public class AssertUtil {
     public static void requirePositive(long value, String message) {

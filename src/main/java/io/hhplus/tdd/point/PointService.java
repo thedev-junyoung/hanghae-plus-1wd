@@ -1,17 +1,17 @@
 package io.hhplus.tdd.point;
 
-import io.hhplus.tdd.AssertUtil;
+import io.hhplus.tdd.utils.AssertUtil;
 import io.hhplus.tdd.point.vo.ChargeAmount;
 import io.hhplus.tdd.point.vo.Point;
 import io.hhplus.tdd.point.vo.UserId;
 import io.hhplus.tdd.policy.PointErrorMessages;
 import io.hhplus.tdd.policy.PointPolicy;
-import io.hhplus.tdd.TimeUtil;
+import io.hhplus.tdd.utils.ITimeProvider;
+import io.hhplus.tdd.utils.KSTTimeProvider;
 import io.hhplus.tdd.database.PointHistoryTable;
 import io.hhplus.tdd.database.UserPointTable;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.catalina.User;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -23,7 +23,7 @@ public class PointService {
 
     private final UserPointTable userPointTable;
     private final PointHistoryTable pointHistoryTable;
-
+    private final ITimeProvider timeProvider;
 //   1. 포인트 충전
     public UserPoint charge(long id, long amount) {
         // 기본 검증
@@ -57,7 +57,7 @@ public class PointService {
 
 
     public UserPoint use(long id, long amount) {
-        AssertUtil.requirePositive(id, PointErrorMessages.USER_NEGATIVE_ID);
+
         return null;
     }
 
@@ -75,8 +75,8 @@ public class PointService {
     public long todayChargeAmount(UserId id) {
         List<PointHistory> allHistories = pointHistoryTable.selectAllByUserId(id.value());
 
-        long start = TimeUtil.getStartOfTodayMillisKST();
-        long end = TimeUtil.getStartOfTomorrowMillisKST(); // exclusive
+        long start = timeProvider.getStartOfTodayMillis();
+        long end = timeProvider.getStartOfTomorrowMillis();
 
         return allHistories.stream()
                 .filter(history -> history.updateMillis() >= start && history.updateMillis() < end)

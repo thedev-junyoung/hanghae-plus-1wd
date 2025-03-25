@@ -4,6 +4,8 @@ import io.hhplus.tdd.policy.PointErrorMessages;
 import io.hhplus.tdd.policy.PointPolicy;
 import io.hhplus.tdd.database.PointHistoryTable;
 import io.hhplus.tdd.database.UserPointTable;
+import io.hhplus.tdd.utils.ITimeProvider;
+import io.hhplus.tdd.utils.KSTTimeProvider;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -33,6 +35,9 @@ class PointServiceTest {
 
     @Mock
     private PointHistoryTable pointHistoryTable;
+
+    @Mock
+    private ITimeProvider timeProvider;
 
     private UserPoint userPoint;
 
@@ -160,15 +165,23 @@ class PointServiceTest {
     @Test
     void charge_하루_최대_충전_한도_초과() {
         long amount = 1_000L;
-        long now = System.currentTimeMillis();
+        long fixedStart = 1_000_000_000L;
+        long fixedNow = fixedStart + 1000;
+        long fixedTomorrow = fixedStart + 24 * 60 * 60 * 1000;
+
+        when(timeProvider.getStartOfTodayMillis()).thenReturn(fixedStart);
+        when(timeProvider.getStartOfTomorrowMillis()).thenReturn(fixedTomorrow);
+        when(timeProvider.getCurrentTimeMillis()).thenReturn(fixedNow);
+
+        long now = timeProvider.getCurrentTimeMillis();
 
         // 기존 포인트 mock (어차피 예외 나니까 얼마든 상관 X)
         when(userPointTable.selectById(USER_ID))
                 .thenReturn(new UserPoint(USER_ID, 500_000L, now));
 
         List<PointHistory> fakeHistory = List.of(
-                new PointHistory(1, USER_ID, 2_000_000L, TransactionType.CHARGE, now),
-                new PointHistory(2, USER_ID, 1_000_000L, TransactionType.CHARGE, now)
+                new PointHistory(1, USER_ID, 2_000_000L, TransactionType.CHARGE, fixedNow),
+                new PointHistory(2, USER_ID, 1_000_000L, TransactionType.CHARGE, fixedNow)
         );
         when(pointHistoryTable.selectAllByUserId(USER_ID)).thenReturn(fakeHistory);
 
@@ -184,6 +197,5 @@ class PointServiceTest {
     @Test
     void use() {
     }
-
 
 }
