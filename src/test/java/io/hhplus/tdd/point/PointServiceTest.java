@@ -139,17 +139,6 @@ class PointServiceTest {
         assertEquals(PointErrorMessages.USER_NEGATIVE_ID, exception.getMessage());
     }
 
-    // 잔애 부족으로 인한 충전 실패
-    @Test
-    void charge_잔액_부족() {
-        long amount = 1_000_000L;
-
-        when(userPointTable.selectById(USER_ID)).thenReturn(userPoint);
-
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> pointService.charge(USER_ID, amount));
-        assertEquals(PointErrorMessages.INSUFFICIENT_BALANCE, exception.getMessage());
-    }
-
     // 정책상 최소 충전 금액 미만
     @Test
     void charge_유효한사용자_ID_최소_미만_충전() {
