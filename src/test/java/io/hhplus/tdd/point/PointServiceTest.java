@@ -47,47 +47,63 @@ class PointServiceTest {
     @Test
     void charge_유효한사용자_ID_정상_범위_충전() {
         // given
-        long amount = 500_000L; // 정책상 유효한 중간 값
-        UserPoint chargedUserPoint = new UserPoint(USER_ID, amount, System.currentTimeMillis());
+        long amount = 500_000L; // 충전 금액
+        long existing = 1_000_000L; // 잔액
+        long expectedTotal = existing + amount; // 예상 잔액
+
+        UserPoint expected = new UserPoint(USER_ID, expectedTotal, System.currentTimeMillis());
+
+        when(userPointTable.selectById(USER_ID))
+                .thenReturn(new UserPoint(USER_ID, existing, System.currentTimeMillis()));
+
 
         // 잔액 조회에 대한 mock 추가
-        when(userPointTable.selectById(USER_ID)).thenReturn(new UserPoint(USER_ID, 1_000_000L, System.currentTimeMillis()));
+        when(userPointTable.selectById(USER_ID)).thenReturn(new UserPoint(USER_ID, existing, System.currentTimeMillis()));
 
         // 충전 로직에 대한 mock
-        when(userPointTable.insertOrUpdate(USER_ID, amount)).thenReturn(chargedUserPoint);
+        when(userPointTable.insertOrUpdate(USER_ID, expectedTotal)).thenReturn(expected);
 
         // when
         UserPoint result = pointService.charge(USER_ID, amount);
 
         // then
-        assertEquals(amount, result.point());
+        assertEquals(expectedTotal, result.point());
     }
 
     // 최소 충전 금액
     @Test
     void charge_유효한사용자_ID_최소_범위_충전() {
         long amount = PointPolicy.MIN_CHARGE_AMOUNT;
-        UserPoint charged = new UserPoint(USER_ID, amount, System.currentTimeMillis());
+        long existing = 1_000_000L;
+        long expected = existing + amount;
+        UserPoint charged = new UserPoint(USER_ID, expected, System.currentTimeMillis());
 
-        when(userPointTable.selectById(USER_ID)).thenReturn(new UserPoint(USER_ID, 1_000_000L, System.currentTimeMillis()));
-        when(userPointTable.insertOrUpdate(USER_ID, amount)).thenReturn(charged);
+        when(userPointTable.selectById(USER_ID))
+                .thenReturn(new UserPoint(USER_ID, existing, System.currentTimeMillis()));
 
+        when(userPointTable.insertOrUpdate(USER_ID, expected))
+                .thenReturn(charged);
 
         UserPoint result = pointService.charge(USER_ID, amount);
-        assertEquals(amount, result.point());
+        assertEquals(expected, result.point());
     }
 
     // 최대 충전 금액
     @Test
     void charge_유효한사용자_ID_최대_범위_충전() {
         long amount = PointPolicy.MAX_CHARGE_AMOUNT;
-        UserPoint charged = new UserPoint(USER_ID, amount, System.currentTimeMillis());
+        long existing = 1_000_000L;
+        long expected = existing + amount;
 
-        when(userPointTable.selectById(USER_ID)).thenReturn(new UserPoint(USER_ID, 1_000_000L, System.currentTimeMillis()));
-        when(userPointTable.insertOrUpdate(USER_ID, amount)).thenReturn(charged);
+        UserPoint charged = new UserPoint(USER_ID, expected, System.currentTimeMillis());
+
+        when(userPointTable.selectById(USER_ID))
+                .thenReturn(new UserPoint(USER_ID, existing, System.currentTimeMillis()));
+
+        when(userPointTable.insertOrUpdate(USER_ID, expected)).thenReturn(charged);
 
         UserPoint result = pointService.charge(USER_ID, amount);
-        assertEquals(amount, result.point());
+        assertEquals(expected, result.point());
     }
 
     // 하루 충전 한도 직전까지 충전 ( 추가된 정책 )
@@ -95,14 +111,19 @@ class PointServiceTest {
     void charge_하루_충전한도_직전까지_충전() {
         long todayTotal = 2_999_000L;
         long amount = 1_000L;
-        long expected = todayTotal + amount;
+        long existing = 500_000L;
+        long expected = existing + amount;
 
         UserPoint charged = new UserPoint(USER_ID, expected, System.currentTimeMillis());
 
-        when(userPointTable.insertOrUpdate(USER_ID, amount)).thenReturn(charged);
+        when(userPointTable.selectById(USER_ID))
+                .thenReturn(new UserPoint(USER_ID, existing, System.currentTimeMillis()));
+
+        when(userPointTable.insertOrUpdate(USER_ID, expected)).thenReturn(charged);
+
         when(pointHistoryTable.insert(eq(USER_ID), eq(amount), eq(TransactionType.CHARGE), anyLong()))
                 .thenReturn(new PointHistory(1L, USER_ID, amount, TransactionType.CHARGE, System.currentTimeMillis()));
-        when(userPointTable.selectById(USER_ID)).thenReturn(new UserPoint(USER_ID, 1_000_000L, System.currentTimeMillis()));
+
         UserPoint result = pointService.charge(USER_ID, amount);
 
         assertEquals(expected, result.point());
@@ -152,16 +173,22 @@ class PointServiceTest {
         long amount = 1_000L;
         long now = System.currentTimeMillis();
 
+        // 기존 포인트 mock (어차피 예외 나니까 얼마든 상관 X)
+        when(userPointTable.selectById(USER_ID))
+                .thenReturn(new UserPoint(USER_ID, 500_000L, now));
+
         List<PointHistory> fakeHistory = List.of(
                 new PointHistory(1, USER_ID, 2_000_000L, TransactionType.CHARGE, now),
                 new PointHistory(2, USER_ID, 1_000_000L, TransactionType.CHARGE, now)
         );
-
         when(pointHistoryTable.selectAllByUserId(USER_ID)).thenReturn(fakeHistory);
 
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> pointService.charge(USER_ID, amount));
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
+                pointService.charge(USER_ID, amount)
+        );
         assertEquals(PointErrorMessages.DAILY_CHARGE_LIMIT, exception.getMessage());
     }
+
 // ================== charge 끝 ==================
 
 // ================== use ==================

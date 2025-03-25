@@ -1,6 +1,8 @@
 package io.hhplus.tdd.point;
 
 import io.hhplus.tdd.AssertUtil;
+import io.hhplus.tdd.point.vo.ChargeAmount;
+import io.hhplus.tdd.point.vo.Point;
 import io.hhplus.tdd.policy.PointErrorMessages;
 import io.hhplus.tdd.policy.PointPolicy;
 import io.hhplus.tdd.TimeUtil;
@@ -28,13 +30,9 @@ public class PointService {
         AssertUtil.requirePositive(amount, PointErrorMessages.AMOUNT_NEGATIVE);
         AssertUtil.requirePositive(id, PointErrorMessages.USER_NEGATIVE_ID);
 
-        // 최소 충전 금액 검증
-        if (amount < PointPolicy.MIN_CHARGE_AMOUNT)
-            throw new IllegalArgumentException(PointErrorMessages.MIN_CHARGE);
-
-        // 최대 충전 금액 검증
-        if (amount > PointPolicy.MAX_CHARGE_AMOUNT)
-            throw new IllegalArgumentException(PointErrorMessages.MAX_CHARGE);
+        ChargeAmount chargeAmount = new ChargeAmount(amount); // 정책 검증 포함
+        Point current = new Point(getUserPointBalance(id));
+        Point newBalance = current.add(chargeAmount);
 
         // 하루 최대 충전 한도 검증
         long todayTotal = todayChargeAmount(id);
@@ -47,10 +45,9 @@ public class PointService {
 
 
 
-        UserPoint userPoint = userPointTable.insertOrUpdate(id, amount);
+        // update
+        UserPoint userPoint = userPointTable.insertOrUpdate(id, newBalance.value());
         PointHistory pointHistory = pointHistoryTable.insert(id, amount, TransactionType.CHARGE, System.currentTimeMillis());
-
-
         return userPoint;
     }
 
