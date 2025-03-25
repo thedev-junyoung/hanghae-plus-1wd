@@ -1,5 +1,6 @@
 package io.hhplus.tdd.point;
 
+import io.hhplus.tdd.point.vo.UseAmount;
 import io.hhplus.tdd.utils.AssertUtil;
 import io.hhplus.tdd.point.vo.ChargeAmount;
 import io.hhplus.tdd.point.vo.Point;
@@ -57,8 +58,23 @@ public class PointService {
 
 
     public UserPoint use(long id, long amount) {
+        UserId userId = new UserId(id);
+        UseAmount useAmount = new UseAmount(amount); // 1회 사용 금액 & 최소 사용 금액 검증
 
-        return null;
+        // 하루 최대 사용 금액 확인
+        long todayUsedAmount = getTodayUsedAmount(userId);
+        if (todayUsedAmount + amount > PointPolicy.MAX_USE_AMOUNT_PER_DAY) {
+            throw new IllegalArgumentException(PointErrorMessages.MAX_USE_AMOUNT_PER_DAY);
+        }
+
+        long currentBalance = getUserPointBalance(userId);
+        Point point = new Point(currentBalance);
+        Point newBalance = point.use(useAmount);
+
+        UserPoint userPoint = userPointTable.insertOrUpdate(userId.value(), newBalance.value());
+        PointHistory pointHistory = pointHistoryTable.insert(id, amount, TransactionType.USE, System.currentTimeMillis());
+
+        return userPoint;
     }
 
     public UserPoint point(long id) {
@@ -85,9 +101,23 @@ public class PointService {
                 .sum();
     }
 
-//    유저 잔액 조회
+//    ================================================================
+    // 유저 잔액 조회
     public long getUserPointBalance(UserId id) {
         return userPointTable.selectById(id.value()).point();
+    }
+
+    public long getTodayUsedAmount(UserId id) {
+        List<PointHistory> allHistories = pointHistoryTable.selectAllByUserId(id.value());
+
+        long start = timeProvider.getStartOfTodayMillis();
+        long end = timeProvider.getStartOfTomorrowMillis();
+
+        return allHistories.stream()
+                .filter(history -> history.updateMillis() >= start && history.updateMillis() < end)
+                .filter(history -> history.type() == TransactionType.USE)
+                .mapToLong(PointHistory::amount)
+                .sum();
     }
 
 

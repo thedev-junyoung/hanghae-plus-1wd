@@ -8,7 +8,7 @@ public record Point(long value) {
         return new Point(this.value + amount.value());
     }
 
-    public Point subtract(UseAmount amount) {
+    public Point use(UseAmount amount) {
         if (this.value < amount.value()) {
             throw new IllegalArgumentException(PointErrorMessages.INSUFFICIENT_BALANCE);
         }
@@ -21,7 +21,7 @@ public record Point(long value) {
 
     public Point charge(ChargeAmount amount) {
         // 최대 잔액 초과 검증
-        if (this.value + amount.value() > PointPolicy.MAX_BALANCE) {
+        if (this.value + amount.value() > PointPolicy.MAX_POINT_BALANCE) {
             throw new IllegalArgumentException(PointErrorMessages.MAX_CHARGE);
         }
         return this.add(amount);
