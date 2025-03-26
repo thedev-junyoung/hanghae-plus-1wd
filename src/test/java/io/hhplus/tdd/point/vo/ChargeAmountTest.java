@@ -6,8 +6,20 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+
+/**
+ * ChargeAmount VO 단위 테스트
+ * 작성 이유:
+ * - 충전 금액에 대한 정책(PointPolicy)을 객체 생성 시점에 강제하기 위해 VO로 분리하였음
+ * - 도메인 유효성 검증이 VO에 위임되었기 때문에 해당 클래스에 대한 단위 테스트가 반드시 필요
+ * 테스트 항목:
+ * 1. 최소/최대 금액 충전이 정상적으로 생성되는지 확인 (정책 경계값 검증)
+ * 2. 일반적인 금액도 정상 생성되는지 확인
+ * 3. 최소 금액 미만, 최대 금액 초과 시 예외가 발생하는지 확인 (정책 위반 케이스)
+ */
 class ChargeAmountTest {
 
+    // [정책] 최소 금액, 최대 금액, 일반 금액 테스트
     @Test
     void ChargeAmount_최소금액_성공() {
         long minAmount = PointPolicy.MIN_CHARGE_AMOUNT;

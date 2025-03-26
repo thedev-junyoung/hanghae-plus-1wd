@@ -5,7 +5,20 @@ import io.hhplus.tdd.policy.error.DomainErrorMessages;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
-
+/**
+ * Point VO 단위 테스트
+ * 작성 이유:
+ * - 포인트 충전/사용과 관련된 핵심 도메인 로직은 Point 객체 내부에 위임되어 있음
+ * - 최대 잔액 초과, 잔액 부족, 잔액 비교 등 도메인 정책에 따른 예외 처리 로직이 포함되어 있어
+ *   Point 객체 자체의 단위 테스트가 반드시 필요
+ * 테스트 항목:
+ * 1. 유효한 충전 요청에 대해 올바르게 포인트가 증가하는지 확인
+ * 2. 충전 결과가 최대 잔액을 초과하면 예외가 발생하는지 검증
+ * 3. 유효한 포인트 사용 요청에 대해 올바르게 포인트가 차감되는지 확인
+ * 4. 잔액보다 많은 금액을 사용하려 할 경우 예외 발생 여부 검증
+ * 5. 포인트가 충분한지 여부를 판별하는 isSufficient 메서드 검증
+ * 6. add 메서드로 정상적으로 포인트를 더할 수 있는지 검증
+ */
 class PointTest {
 
     @Test
