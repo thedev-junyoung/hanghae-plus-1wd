@@ -1,0 +1,136 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > UseAmount</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">io.hhplus.tdd.point.vo</a>
+</div>
+
+<h1>Coverage Summary for Class: UseAmount (io.hhplus.tdd.point.vo)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">UseAmount</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/2)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/4)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/6)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package io.hhplus.tdd.point.vo;
+&nbsp;
+&nbsp;import io.hhplus.tdd.policy.error.DomainErrorMessages;
+&nbsp;
+&nbsp;import static io.hhplus.tdd.policy.PointPolicy.*;
+&nbsp;
+&nbsp;/**
+&nbsp; * 포인트 사용량을 나타내는 값 객체
+&nbsp; * 단일 거래에 대한 비즈니스 규칙을 검증:
+&nbsp; * - 최소 사용 금액(MIN_USE_AMOUNT) 이상이어야 함
+&nbsp; * - 단일 거래 최대 사용 금액(MAX_USE_AMOUNT_PER_TRANSACTION) 이하여야 함
+&nbsp; */
+<b class="nc">&nbsp;public record UseAmount(long value) {</b>
+<b class="nc">&nbsp;    public UseAmount {  // compact constructor 사용</b>
+<b class="nc">&nbsp;        if (value &lt; MIN_USE_AMOUNT)</b>
+<b class="nc">&nbsp;            throw new IllegalArgumentException(DomainErrorMessages.MIN_USE);</b>
+<b class="nc">&nbsp;        if (value &gt; MAX_USE_AMOUNT_PER_TRANSACTION)  // 단일 거래 최대 금액으로 변경</b>
+<b class="nc">&nbsp;            throw new IllegalArgumentException(DomainErrorMessages.MAX_USE);</b>
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2025-03-26 21:07</div>
+</div>
+</body>
+</html>

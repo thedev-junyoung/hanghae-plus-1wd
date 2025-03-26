@@ -1,0 +1,134 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > PointPolicy</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">io.hhplus.tdd.policy</a>
+</div>
+
+<h1>Coverage Summary for Class: PointPolicy (io.hhplus.tdd.policy)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">PointPolicy</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/2)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package io.hhplus.tdd.policy;
+&nbsp;
+&nbsp;public class PointPolicy {
+&nbsp;    // ==== 보유 정책 ====
+&nbsp;    // 유저별 최대 포인트 잔고
+&nbsp;    public static final long MAX_POINT_BALANCE = 100_000_000L;
+&nbsp;
+&nbsp;    // ==== 충전 정책 ====
+&nbsp;    // 최소 충전 금액
+&nbsp;    public static final long MIN_CHARGE_AMOUNT = 1_000L;
+&nbsp;    // 최대 충전 금액
+&nbsp;    public static final long MAX_CHARGE_AMOUNT = 1_000_000L;
+&nbsp;    // 하루 충전 한도
+&nbsp;    public static final long DAILY_CHARGE_LIMIT = 3_000_000L;
+&nbsp;
+&nbsp;    // ====  사용 정책 ====
+&nbsp;    // 1회 사용 최대 금액 (단일 거래 한도)
+&nbsp;    public static final long MAX_USE_AMOUNT_PER_TRANSACTION = 10_000_000L;
+&nbsp;
+&nbsp;    // 1일 누적 사용 최대 금액 (하루 한도)
+&nbsp;    public static final long MAX_USE_AMOUNT_PER_DAY = 10_000_000L;
+&nbsp;
+&nbsp;    // 최소 사용 금액
+&nbsp;    public static final long MIN_USE_AMOUNT = 100L;
+&nbsp;
+&nbsp;
+<b class="nc">&nbsp;    private PointPolicy() {</b>
+<b class="nc">&nbsp;        throw new AssertionError(&quot;인스턴스 생성 불가&quot;);</b>
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2025-03-26 21:07</div>
+</div>
+</body>
+</html>

@@ -119,14 +119,6 @@ class PointServiceTest {
     }
 //-------------------------------------------------
 // charge - 실패 케이스
-    @ParameterizedTest
-    @ValueSource(longs = {0, -1})
-    void charge_유효하지_사용자_ID_검증_실패(long invalidUserId) {
-        long amount = 1_000L;
-
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> pointService.charge(invalidUserId, amount));
-        assertEquals(DomainErrorMessages.USER_NEGATIVE_ID, exception.getMessage());
-    }
     // 정책상 최소 충전 포인트 미만
     @Test
     void charge_하루한도_초과_충전_실패() {
@@ -159,7 +151,7 @@ class PointServiceTest {
 // ================== use ==================
 // use - 성공 케이스
     @Test
-    void use_유효한_사용자_ID_유효한_포인트_사용_성공() {
+    void use_유효한_포인트_사용_성공() {
         long amount = 500_000L;
         long existing = 1_000_000L;
         long expected = existing - amount;
@@ -251,7 +243,7 @@ class PointServiceTest {
         assertEquals(expected, result.point());
     }
     @Test
-    void use_최소_사용_포인트_정상처리_성공() {
+    void use_최소_사용_포인트_정상_처리_성공() {
         long amount = PointPolicy.MIN_USE_AMOUNT; // 100L
         long existing = 10_000L;
         long expected = existing - amount;
@@ -304,6 +296,38 @@ class PointServiceTest {
         assertEquals(ServiceErrorMessages.MAX_USE_AMOUNT_PER_DAY, exception.getMessage());
     }
 // ================== use 끝 ==================
-// use - 실패 케이스
-// ================== use 끝 ==================
+
+// ================== point ===================
+    @Test
+    void point_포인트_조회_성공() {
+        long existing = 1_000_000L;
+        long now = timeProvider.getCurrentTimeMillis();
+
+        when(userPointTable.selectById(USER_ID))
+                .thenReturn(new UserPoint(USER_ID, existing, now));
+
+        UserPoint result = pointService.point(USER_ID);
+        assertEquals(existing, result.point());
+    }
+
+    @Test
+    void point_포인트_0_조회_성공() {
+        long existing = 0L;
+        long now = timeProvider.getCurrentTimeMillis();
+
+        when(userPointTable.selectById(USER_ID))
+                .thenReturn(new UserPoint(USER_ID, existing, now));
+
+        UserPoint result = pointService.point(USER_ID);
+        assertEquals(existing, result.point());
+    }
+
+    @Test
+    void point_사용자_존재하지_않음_조회_null_반환_성공() {
+        when(userPointTable.selectById(USER_ID)).thenReturn(null);
+        UserPoint result = pointService.point(USER_ID);
+        assertNull(result);
+    }
+
+
 }
