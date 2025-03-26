@@ -39,13 +39,6 @@ class PointServiceTest {
     @Mock
     private ITimeProvider timeProvider;
 
-    private UserPoint userPoint;
-
-    @BeforeEach
-    void setUp() {
-        userPoint = UserPoint.empty(USER_ID);
-    }
-
 // ================== charge ==================
 // charge - 성공 케이스
     // 정상 범위 충전
@@ -107,7 +100,6 @@ class PointServiceTest {
     // 하루 충전 한도 직전까지 충전 ( 추가된 정책 )
     @Test
     void charge_하루한도_직전까지_충전_성공() {
-        long todayTotal = 2_999_000L;
         long amount = 1_000L;
         long existing = 500_000L;
         long expected = existing + amount;
@@ -291,7 +283,6 @@ class PointServiceTest {
     void use_일일_사용_포인트_초과_실패() {
         // given
         long amountToUse = 1_000_000L;
-        long userCurrentBalance = 10_000_000L;
         long now = System.currentTimeMillis();
         long startOfToday = now - 1000;
         long startOfTomorrow = now + 1000;
