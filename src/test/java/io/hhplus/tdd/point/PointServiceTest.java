@@ -6,7 +6,6 @@ import io.hhplus.tdd.database.UserPointTable;
 import io.hhplus.tdd.policy.error.DomainErrorMessages;
 import io.hhplus.tdd.policy.error.ServiceErrorMessages;
 import io.hhplus.tdd.utils.ITimeProvider;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
