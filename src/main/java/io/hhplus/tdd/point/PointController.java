@@ -2,12 +2,16 @@ package io.hhplus.tdd.point;
 
 import io.hhplus.tdd.point.dto.ChargeRequest;
 import io.hhplus.tdd.point.dto.UsePointRequest;
+import io.hhplus.tdd.policy.error.ApiErrorMessages;
+import io.hhplus.tdd.utils.AssertUtil;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+
+import static io.hhplus.tdd.policy.error.ApiErrorMessages.USER_ID_NEGATIVE;
 
 @RestController
 @RequestMapping("/point")
@@ -23,6 +27,7 @@ public class PointController {
     public UserPoint point(
             @PathVariable long id
     ) {
+        AssertUtil.requirePositive(id, ApiErrorMessages.USER_ID_NEGATIVE);
         return new UserPoint(0, 0, 0);
     }
 
@@ -33,6 +38,7 @@ public class PointController {
     public List<PointHistory> history(
             @PathVariable long id
     ) {
+        AssertUtil.requirePositive(id, ApiErrorMessages.USER_ID_NEGATIVE);
         return List.of();
     }
 
@@ -45,6 +51,7 @@ public class PointController {
             //@RequestBody long amount
             @RequestBody ChargeRequest request // 기본 검증을 위한 DTO 사용
     ) {
+        AssertUtil.requirePositive(id, ApiErrorMessages.USER_ID_NEGATIVE);
         return pointService.charge(id, request.amount());
 
     }
@@ -58,6 +65,7 @@ public class PointController {
             // @RequestBody long amount
             @RequestBody UsePointRequest request // 기본 검증을 위한 DTO 사용
     ) {
+        AssertUtil.requirePositive(id, ApiErrorMessages.USER_ID_NEGATIVE);
         return pointService.use(id, request.amount());
     }
 }
