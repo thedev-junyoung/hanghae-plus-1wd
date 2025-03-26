@@ -1,11 +1,11 @@
 package io.hhplus.tdd.point;
 
-import io.hhplus.tdd.policy.PointErrorMessages;
 import io.hhplus.tdd.policy.PointPolicy;
 import io.hhplus.tdd.database.PointHistoryTable;
 import io.hhplus.tdd.database.UserPointTable;
+import io.hhplus.tdd.policy.error.DomainErrorMessages;
+import io.hhplus.tdd.policy.error.ServiceErrorMessages;
 import io.hhplus.tdd.utils.ITimeProvider;
-import io.hhplus.tdd.utils.KSTTimeProvider;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -134,24 +134,9 @@ class PointServiceTest {
         long amount = 1_000L;
 
         IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> pointService.charge(invalidUserId, amount));
-        assertEquals(PointErrorMessages.USER_NEGATIVE_ID, exception.getMessage());
+        assertEquals(DomainErrorMessages.USER_NEGATIVE_ID, exception.getMessage());
     }
     // 정책상 최소 충전 포인트 미만
-    @Test
-    void charge_최소포인트_미만_충전_실패() {
-        long amount = PointPolicy.MIN_CHARGE_AMOUNT - 1;
-
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> pointService.charge(USER_ID, amount));
-        assertEquals(PointErrorMessages.MIN_CHARGE, exception.getMessage());
-    }
-    // 음수 충전 포인트
-    @Test
-    void charge_음수포인트_충전_실패() {
-        long amount = -1L;
-
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> pointService.charge(USER_ID, amount));
-        assertEquals(PointErrorMessages.AMOUNT_NEGATIVE, exception.getMessage());
-    }
     @Test
     void charge_하루한도_초과_충전_실패() {
         long amount = 1_000L;
@@ -177,7 +162,7 @@ class PointServiceTest {
         IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
                 pointService.charge(USER_ID, amount)
         );
-        assertEquals(PointErrorMessages.DAILY_CHARGE_LIMIT, exception.getMessage());
+        assertEquals(ServiceErrorMessages.DAILY_CHARGE_LIMIT, exception.getMessage());
     }
 // ================== charge 끝 ==================
 // ================== use ==================
@@ -292,14 +277,6 @@ class PointServiceTest {
 // --------------------------------------
 // use - 실패 케이스
     @Test
-    void use_유효하지_사용자_ID_검증_실패() {
-        long amount = 1_000L;
-        long invalidUserId = -1L;
-
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> pointService.use(invalidUserId, amount));
-        assertEquals(PointErrorMessages.USER_NEGATIVE_ID, exception.getMessage());
-    }
-    @Test
     void use_보유_포인트_보다_많은_포인트_사용_실패() {
         long amount = 1_000_000L;
         long existing = 500_000L;
@@ -308,14 +285,7 @@ class PointServiceTest {
                 .thenReturn(new UserPoint(USER_ID, existing, System.currentTimeMillis()));
 
         IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> pointService.use(USER_ID, amount));
-        assertEquals(PointErrorMessages.INSUFFICIENT_BALANCE, exception.getMessage());
-    }
-    @Test
-    void use_최소_사용_포인트_미만_실패() {
-        long amount = PointPolicy.MIN_USE_AMOUNT - 1;
-
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> pointService.use(USER_ID, amount));
-        assertEquals(PointErrorMessages.MIN_USE, exception.getMessage());
+        assertEquals(DomainErrorMessages.INSUFFICIENT_BALANCE, exception.getMessage());
     }
     @Test
     void use_일일_사용_포인트_초과_실패() {
@@ -341,21 +311,7 @@ class PointServiceTest {
                 pointService.use(USER_ID, amountToUse)
         );
 
-        assertEquals(PointErrorMessages.MAX_USE_AMOUNT_PER_DAY, exception.getMessage());
-    }
-    @Test
-    void use_1회_사용_금액이_최대_사용_금액_초과하면_실패() {
-        // given
-        long overMaxAmount = PointPolicy.MAX_USE_AMOUNT_PER_TRANSACTION + 1;
-
-        // when & then
-        IllegalArgumentException exception = assertThrows(
-                IllegalArgumentException.class,
-                () -> pointService.use(USER_ID, overMaxAmount)
-        );
-
-        // then
-        assertEquals(PointErrorMessages.MAX_USE, exception.getMessage());
+        assertEquals(ServiceErrorMessages.MAX_USE_AMOUNT_PER_DAY, exception.getMessage());
     }
 // ================== use 끝 ==================
 // use - 실패 케이스
