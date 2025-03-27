@@ -1,7 +1,8 @@
 package io.hhplus.tdd.point.vo;
 
-import io.hhplus.tdd.policy.PointPolicy;
-import io.hhplus.tdd.policy.error.DomainErrorMessages;
+import io.hhplus.tdd.domain.point.policy.PointPolicy;
+import io.hhplus.tdd.domain.point.error.DomainErrorMessages;
+import io.hhplus.tdd.domain.point.vo.UseAmount;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -26,7 +27,7 @@ class UseAmountTest {
     void UseAmount_최소금액_성공() {
         long minAmount = PointPolicy.MIN_USE_AMOUNT;
 
-        UseAmount useAmount = new UseAmount(minAmount);
+        UseAmount useAmount = UseAmount.validated(minAmount);
 
         assertEquals(minAmount, useAmount.value());
     }
@@ -35,7 +36,7 @@ class UseAmountTest {
     void UseAmount_최대금액_성공() {
         long maxAmount = PointPolicy.MAX_USE_AMOUNT_PER_TRANSACTION;
 
-        UseAmount useAmount = new UseAmount(maxAmount);
+        UseAmount useAmount = UseAmount.validated(maxAmount);
 
         assertEquals(maxAmount, useAmount.value());
     }
@@ -44,9 +45,21 @@ class UseAmountTest {
     void UseAmount_일반금액_성공() {
         long validAmount = 5000;
 
-        UseAmount useAmount = new UseAmount(validAmount);
+        UseAmount useAmount = UseAmount.validated(validAmount);
 
         assertEquals(validAmount, useAmount.value());
+    }
+
+    @Test
+    void UseAmount_음수금액_실패() {
+        long invalid = -100;
+
+        IllegalArgumentException exception = assertThrows(
+                IllegalArgumentException.class,
+                () -> UseAmount.validated(invalid)
+        );
+
+        assertEquals(DomainErrorMessages.MIN_USE, exception.getMessage());
     }
 
     @Test
@@ -55,7 +68,7 @@ class UseAmountTest {
 
         IllegalArgumentException exception = assertThrows(
                 IllegalArgumentException.class,
-                () -> new UseAmount(invalidAmount)
+                () -> UseAmount.validated(invalidAmount)
         );
 
         assertEquals(DomainErrorMessages.MIN_USE, exception.getMessage());
@@ -67,7 +80,7 @@ class UseAmountTest {
 
         IllegalArgumentException exception = assertThrows(
                 IllegalArgumentException.class,
-                () -> new UseAmount(invalidAmount)
+                () -> UseAmount.validated(invalidAmount)
         );
 
         assertEquals(DomainErrorMessages.MAX_USE, exception.getMessage());

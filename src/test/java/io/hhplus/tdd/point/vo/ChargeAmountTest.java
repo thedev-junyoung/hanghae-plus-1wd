@@ -1,7 +1,8 @@
 package io.hhplus.tdd.point.vo;
 
-import io.hhplus.tdd.policy.PointPolicy;
-import io.hhplus.tdd.policy.error.DomainErrorMessages;
+import io.hhplus.tdd.domain.point.policy.PointPolicy;
+import io.hhplus.tdd.domain.point.error.DomainErrorMessages;
+import io.hhplus.tdd.domain.point.vo.ChargeAmount;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -23,22 +24,34 @@ class ChargeAmountTest {
     @Test
     void ChargeAmount_최소금액_성공() {
         long minAmount = PointPolicy.MIN_CHARGE_AMOUNT;
-        ChargeAmount chargeAmount = new ChargeAmount(minAmount);
+        ChargeAmount chargeAmount = ChargeAmount.validated(minAmount);
         assertEquals(minAmount, chargeAmount.value());
     }
 
     @Test
     void ChargeAmount_최대금액_성공() {
         long maxAmount = PointPolicy.MAX_CHARGE_AMOUNT;
-        ChargeAmount chargeAmount = new ChargeAmount(maxAmount);
+        ChargeAmount chargeAmount = ChargeAmount.validated(maxAmount);
         assertEquals(maxAmount, chargeAmount.value());
     }
 
     @Test
     void ChargeAmount_일반금액_성공() {
         long validAmount = 50_000L;
-        ChargeAmount chargeAmount = new ChargeAmount(validAmount);
+        ChargeAmount chargeAmount = ChargeAmount.validated(validAmount);
         assertEquals(validAmount, chargeAmount.value());
+    }
+
+    @Test
+    void ChargeAmount_음수금액_실패() {
+        long invalid = -500;
+
+        IllegalArgumentException exception = assertThrows(
+                IllegalArgumentException.class,
+                () -> ChargeAmount.validated(invalid)
+        );
+
+        assertEquals(DomainErrorMessages.MIN_CHARGE, exception.getMessage());
     }
 
     @Test
@@ -47,7 +60,7 @@ class ChargeAmountTest {
 
         IllegalArgumentException exception = assertThrows(
                 IllegalArgumentException.class,
-                () -> new ChargeAmount(invalidAmount)
+                () -> ChargeAmount.validated(invalidAmount)
         );
 
         assertEquals(DomainErrorMessages.MIN_CHARGE, exception.getMessage());
@@ -59,7 +72,7 @@ class ChargeAmountTest {
 
         IllegalArgumentException exception = assertThrows(
                 IllegalArgumentException.class,
-                () -> new ChargeAmount(invalidAmount)
+                () -> ChargeAmount.validated(invalidAmount)
         );
 
         assertEquals(DomainErrorMessages.MAX_CHARGE, exception.getMessage());

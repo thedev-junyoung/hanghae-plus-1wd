@@ -1,7 +1,10 @@
 package io.hhplus.tdd.point.vo;
 
-import io.hhplus.tdd.policy.PointPolicy;
-import io.hhplus.tdd.policy.error.DomainErrorMessages;
+import io.hhplus.tdd.domain.point.policy.PointPolicy;
+import io.hhplus.tdd.domain.point.error.DomainErrorMessages;
+import io.hhplus.tdd.domain.point.vo.ChargeAmount;
+import io.hhplus.tdd.domain.point.vo.Point;
+import io.hhplus.tdd.domain.point.vo.UseAmount;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -23,8 +26,8 @@ class PointTest {
 
     @Test
     void Point_충전_성공() {
-        Point point = new Point(1000);
-        ChargeAmount chargeAmount = new ChargeAmount(5000);
+        Point point = Point.of(1000);
+        ChargeAmount chargeAmount = ChargeAmount.validated(5000);
 
         Point newPoint = point.charge(chargeAmount);
 
@@ -33,8 +36,8 @@ class PointTest {
 
     @Test
     void Point_충전후_최대잔액초과_실패() {
-        Point point = new Point(PointPolicy.MAX_POINT_BALANCE - 1000);
-        ChargeAmount chargeAmount = new ChargeAmount(2000);
+        Point point = Point.of(PointPolicy.MAX_POINT_BALANCE - 1000);
+        ChargeAmount chargeAmount = ChargeAmount.validated(2000);
 
         IllegalArgumentException exception = assertThrows(
                 IllegalArgumentException.class,
@@ -46,8 +49,8 @@ class PointTest {
 
     @Test
     void Point_사용_성공() {
-        Point point = new Point(10000);
-        UseAmount useAmount = new UseAmount(3000);
+        Point point = Point.of(10000);
+        UseAmount useAmount = UseAmount.validated(3000);
 
         Point newPoint = point.use(useAmount);
 
@@ -55,9 +58,21 @@ class PointTest {
     }
 
     @Test
+    void Point_음수잔액_생성_실패() {
+        long invalidValue = -1;
+
+        IllegalArgumentException exception = assertThrows(
+                IllegalArgumentException.class,
+                () -> Point.of(invalidValue)
+        );
+
+        assertEquals(DomainErrorMessages.MIN_POINT, exception.getMessage());
+    }
+
+    @Test
     void Point_잔액부족_사용실패() {
-        Point point = new Point(1000);
-        UseAmount useAmount = new UseAmount(2000);
+        Point point = Point.of(1000);
+        UseAmount useAmount = UseAmount.validated(2000);
 
         IllegalArgumentException exception = assertThrows(
                 IllegalArgumentException.class,
@@ -69,17 +84,17 @@ class PointTest {
 
     @Test
     void Point_잔액충분여부_확인_성공() {
-        Point point = new Point(5000);
-        UseAmount sufficientAmount = new UseAmount(3000);
-        UseAmount insufficientAmount = new UseAmount(7000);
+        Point point = Point.of(5000);
+        UseAmount sufficientAmount = UseAmount.validated(3000);
+        UseAmount insufficientAmount = UseAmount.validated(7000);
         assertTrue(point.isSufficient(sufficientAmount));
         assertFalse(point.isSufficient(insufficientAmount));
     }
 
     @Test
     void Point_add_메소드_성공() {
-        Point point = new Point(3000);
-        ChargeAmount chargeAmount = new ChargeAmount(2000);
+        Point point = Point.of(3000);
+        ChargeAmount chargeAmount = ChargeAmount.validated(2000);
 
         Point newPoint = point.add(chargeAmount);
 
