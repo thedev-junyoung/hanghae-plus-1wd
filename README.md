@@ -317,21 +317,17 @@ private ReentrantLock getUserLock(long userId) {
 
 ```java
 // 주기적으로 사용되지 않는 락 객체 정리
-@Scheduled(fixedRate = 3600000) // 1시간마다 정리
 public void cleanupUnusedLocks() {
-    final long currentTime = System.currentTimeMillis();
-    final long expirationTime = 24 * 60 * 60 * 1000; // 24시간 동안 사용되지 않은 락은 제거
+    long now = System.currentTimeMillis();
 
-    // 사용되지 않은 락을 찾아서 제거
-    Iterator<Map.Entry<Long, LockWithTimestamp>> iterator = userLocks.entrySet().iterator();
-    while (iterator.hasNext()) {
-        Map.Entry<Long, LockWithTimestamp> entry = iterator.next();
-        LockWithTimestamp lockWithTimestamp = entry.getValue();
+    Iterator<Map.Entry<Long, LockWithTimestamp>> it = userLocks.entrySet().iterator();
+    while (it.hasNext()) {
+        Map.Entry<Long, LockWithTimestamp> entry = it.next();
+        LockWithTimestamp lwt = entry.getValue();
 
-        // 락이 현재 사용 중이 아니고 마지막 사용 시간이 만료 시간을 초과했는지 확인
-        if (!lockWithTimestamp.lock.isLocked() &&
-                (currentTime - lockWithTimestamp.lastAccessTime > expirationTime)) {
-            iterator.remove();
+        if (!lwt.getLock().isLocked() &&
+                now - lwt.getLastAccessTime() > expirationMillis) {
+            it.remove();
         }
     }
 
