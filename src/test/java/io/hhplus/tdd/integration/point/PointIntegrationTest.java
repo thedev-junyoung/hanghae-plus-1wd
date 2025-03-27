@@ -1,4 +1,4 @@
-package io.hhplus.tdd.integration;
+package io.hhplus.tdd.integration.point;
 
 import io.hhplus.tdd.api.controller.PointController;
 import io.hhplus.tdd.domain.point.dto.ChargeRequest;
