@@ -1,5 +1,6 @@
 package io.hhplus.tdd.domain.point.service;
 
+import io.hhplus.tdd.domain.point.service.lock.UserLockManager;
 import io.hhplus.tdd.infrastructure.time.ITimeProvider;
 import io.hhplus.tdd.domain.point.model.PointHistory;
 import io.hhplus.tdd.domain.point.model.TransactionType;
@@ -12,9 +13,11 @@ import io.hhplus.tdd.domain.point.error.ServiceErrorMessages;
 import io.hhplus.tdd.infrastructure.database.PointHistoryTable;
 import io.hhplus.tdd.infrastructure.database.UserPointTable;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.concurrent.locks.ReentrantLock;
 
 
 /**
@@ -38,69 +41,86 @@ import java.util.List;
  */
 
 @Service
+@Slf4j
 @RequiredArgsConstructor
-public class PointService {
+public class PointService implements IPointService {
 
     private final UserPointTable userPointTable;
     private final PointHistoryTable pointHistoryTable;
     private final ITimeProvider timeProvider;
+    private final UserLockManager lockManager;
 
+    @Override
     public UserPoint charge(long id, long amount) {
-        // 사용자 존재 확인
-        UserPoint userPoint = findUserPointOrThrow(id);
+        ReentrantLock lock = lockManager.getUserLock(id);
+        lock.lock();
+        try {
+            // 사용자 존재 확인
+            UserPoint userPoint = findUserPointOrThrow(id);
 
-        // 도메인 객체 생성
-        ChargeAmount chargeAmount = ChargeAmount.validated(amount); // 충전 금액 객체 생성(도메인에 검증 로직 위임)
-        Point currentPoint = Point.of(userPoint.point()); // Point 객체 생성
+            // 도메인 객체 생성
+            ChargeAmount chargeAmount = ChargeAmount.validated(amount);
+            Point currentPoint = Point.of(userPoint.point());
 
-        // 일일 충전 한도 검증 - 정책 검증
-        long todayTotal = getTodayChargeAmount(id);
-        if (todayTotal + amount > PointPolicy.DAILY_CHARGE_LIMIT) {
-            throw new IllegalArgumentException(ServiceErrorMessages.DAILY_CHARGE_LIMIT);
+            // 일일 충전 한도 검증
+            long todayTotal = getTodayChargeAmount(id);
+            if (todayTotal + amount > PointPolicy.DAILY_CHARGE_LIMIT) {
+                throw new IllegalArgumentException(ServiceErrorMessages.DAILY_CHARGE_LIMIT);
+            }
+
+            // 실제 충전 (도메인 로직 수행)
+            Point newBalance = currentPoint.charge(chargeAmount);
+
+            // DB 업데이트
+            UserPoint updatedUserPoint = userPointTable.insertOrUpdate(id, newBalance.value());
+
+            // 충전 이력 저장
+            pointHistoryTable.insert(id, amount, TransactionType.CHARGE, timeProvider.getCurrentTimeMillis());
+
+            return updatedUserPoint;
+        } finally {
+            lock.unlock();
         }
-
-        // 실제 충전 (도메인 로직 수행)
-        Point newBalance = currentPoint.charge(chargeAmount);
-
-        // DB 업데이트
-        UserPoint updatedUserPoint = userPointTable.insertOrUpdate(id, newBalance.value());
-
-        // 충전 이력 저장
-        pointHistoryTable.insert(id, amount, TransactionType.CHARGE, timeProvider.getCurrentTimeMillis());
-
-        return updatedUserPoint;
     }
-
+    @Override
     public UserPoint use(long id, long amount) {
-        // 사용자 존재 확인
-        UserPoint userPoint = findUserPointOrThrow(id);
+        ReentrantLock lock = lockManager.getUserLock(id);
+        lock.lock();
+        try {
+            // 사용자 존재 확인
+            UserPoint userPoint = findUserPointOrThrow(id);
 
-        // 도메인 객체 생성
-        UseAmount useAmount = UseAmount.validated(amount); // 사용 금액 객체 생성(도메인에 검증 로직 위임)
-        Point currentPoint = Point.of(userPoint.point()); // 잔액 조회 및 Point 객체 생성
+            // 도메인 객체 생성
+            UseAmount useAmount = UseAmount.validated(amount);
+            Point currentPoint = Point.of(userPoint.point());
 
-        // 일일 사용 한도 검증 - 정책 검증
-        long todayUsedAmount = getTodayUsedAmount(id);
-        if (todayUsedAmount + useAmount.value() > PointPolicy.MAX_USE_AMOUNT_PER_DAY) {
-            throw new IllegalArgumentException(ServiceErrorMessages.MAX_USE_AMOUNT_PER_DAY);
+            // 일일 사용 한도 검증
+            long todayUsedAmount = getTodayUsedAmount(id);
+            if (todayUsedAmount + useAmount.value() > PointPolicy.MAX_USE_AMOUNT_PER_DAY) {
+                throw new IllegalArgumentException(ServiceErrorMessages.MAX_USE_AMOUNT_PER_DAY);
+            }
+
+            // 실제 포인트 사용 (도메인 로직 수행)
+            Point newBalance = currentPoint.use(useAmount);
+
+            // DB 업데이트
+            UserPoint updatedUserPoint = userPointTable.insertOrUpdate(id, newBalance.value());
+
+            // 사용 이력 저장
+            pointHistoryTable.insert(id, useAmount.value(), TransactionType.USE, timeProvider.getCurrentTimeMillis());
+
+            return updatedUserPoint;
+        } finally {
+            lock.unlock();
         }
-
-        // 실제 포인트 사용 (도메인 로직 수행)
-        Point newBalance = currentPoint.use(useAmount);
-
-        // DB 업데이트
-        UserPoint updatedUserPoint = userPointTable.insertOrUpdate(id, newBalance.value());
-
-        // 사용 이력 저장
-        pointHistoryTable.insert(id, useAmount.value(), TransactionType.USE, timeProvider.getCurrentTimeMillis());
-
-        return updatedUserPoint;
     }
 
+    @Override
     public UserPoint point(long id) {
         return findUserPointOrThrow(id);
     }
 
+    @Override
     public List<PointHistory> history(long id) {
         UserPoint userPoint = findUserPointOrThrow(id);
         return pointHistoryTable.selectAllByUserId(userPoint.id());
@@ -144,6 +164,5 @@ public class PointService {
                 .mapToLong(PointHistory::amount)
                 .sum();
     }
-
 
 }
