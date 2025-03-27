@@ -1,6 +1,7 @@
 package io.hhplus.tdd.unit.point.service;
 
 import io.hhplus.tdd.domain.point.service.PointService;
+import io.hhplus.tdd.domain.point.service.lock.UserLockManager;
 import io.hhplus.tdd.infrastructure.time.ITimeProvider;
 import io.hhplus.tdd.domain.point.model.PointHistory;
 import io.hhplus.tdd.domain.point.model.TransactionType;
@@ -10,6 +11,7 @@ import io.hhplus.tdd.infrastructure.database.PointHistoryTable;
 import io.hhplus.tdd.infrastructure.database.UserPointTable;
 import io.hhplus.tdd.domain.point.error.DomainErrorMessages;
 import io.hhplus.tdd.domain.point.error.ServiceErrorMessages;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -17,10 +19,12 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.List;
+import java.util.concurrent.locks.ReentrantLock;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.when;
 
 
@@ -56,6 +60,21 @@ class PointServiceTest {
 
     @Mock
     private ITimeProvider timeProvider;
+
+    @Mock
+    private UserLockManager lockManager;
+
+    @BeforeEach
+    void setup() {
+        // 모든 테스트 공통으로 쓸 수 있도록 dummy lock 설정
+        ReentrantLock dummyLock = new ReentrantLock();
+
+        // UserLockManager는 PointService 내부에서 락 획득 용도로만 사용되며,
+        // 테스트 대상 메서드에 따라 직접적인 결과를 검증하지 않음.
+        // 따라서 Mockito는 '사용되지 않은 stubbing'으로 인식하지만,
+        // 테스트 흐름상 반드시 필요한 Mock 객체이므로 lenient()로 불필요한 예외 방지.
+        lenient().when(lockManager.getUserLock(anyLong())).thenReturn(dummyLock);
+    }
 
 // ================== charge ==================
     // 성공 케이스
@@ -203,7 +222,6 @@ class PointServiceTest {
 
 
         UserPoint result = pointService.use(USER_ID, amount);
-        System.out.println(result);
         assertEquals(expected, result.point());
     }
     // [경계값 테스트] 최소 사용 금액으로도 포인트 사용이 가능한지 검증
@@ -241,7 +259,6 @@ class PointServiceTest {
                 .thenReturn(new UserPoint(USER_ID, existing, now));
 
         UserPoint result = pointService.use(USER_ID, amount);
-        System.out.println(result.point());
         assertEquals(expected, result.point());
     }
     // [정책 검증] 하루 사용 한도 직전까지 사용이 가능한지 확인
