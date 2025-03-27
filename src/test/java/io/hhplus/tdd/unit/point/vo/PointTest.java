@@ -1,4 +1,4 @@
-package io.hhplus.tdd.point.vo;
+package io.hhplus.tdd.unit.point.vo;
 
 import io.hhplus.tdd.domain.point.policy.PointPolicy;
 import io.hhplus.tdd.domain.point.error.DomainErrorMessages;

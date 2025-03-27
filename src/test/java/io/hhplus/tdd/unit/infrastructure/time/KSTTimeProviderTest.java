@@ -1,5 +1,6 @@
-package io.hhplus.tdd.infrastructure.time;
+package io.hhplus.tdd.unit.infrastructure.time;
 
+import io.hhplus.tdd.infrastructure.time.KSTTimeProvider;
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalDate;

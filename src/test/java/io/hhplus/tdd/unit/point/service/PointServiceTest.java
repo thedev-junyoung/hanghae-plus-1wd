@@ -1,4 +1,4 @@
-package io.hhplus.tdd.point.service;
+package io.hhplus.tdd.unit.point.service;
 
 import io.hhplus.tdd.domain.point.service.PointService;
 import io.hhplus.tdd.infrastructure.time.ITimeProvider;

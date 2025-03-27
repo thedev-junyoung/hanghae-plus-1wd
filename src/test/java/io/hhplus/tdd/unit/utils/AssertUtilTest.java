@@ -1,4 +1,4 @@
-package io.hhplus.tdd.utils;
+package io.hhplus.tdd.unit.utils;
 
 import static org.junit.jupiter.api.Assertions.*;
 
