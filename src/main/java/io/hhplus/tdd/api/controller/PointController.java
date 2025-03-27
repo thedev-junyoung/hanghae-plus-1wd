@@ -29,7 +29,7 @@ public class PointController {
             @PathVariable long id
     ) {
         AssertUtil.requirePositive(id, ApiErrorMessages.USER_ID_NEGATIVE);
-        return new UserPoint(0, 0, 0);
+        return pointService.point(id);
     }
 
     /**
@@ -40,7 +40,7 @@ public class PointController {
             @PathVariable long id
     ) {
         AssertUtil.requirePositive(id, ApiErrorMessages.USER_ID_NEGATIVE);
-        return List.of();
+        return pointService.history(id);
     }
 
     /**
